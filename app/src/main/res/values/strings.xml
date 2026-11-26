@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">OpenStandBy</string>
+    <string name="clock_module">Clock</string>
+    <string name="speed_module">GPS speedometer</string>
+    <string name="settings_title">Settings</string>
+    <string name="close_settings">Close settings</string>
+    <string name="module_settings_title">%1$s settings</string>
+    <string name="player_settings_title">Player settings</string>
+    <string name="player_lyrics_settings">Lyrics</string>
+    <string name="lyrics_traditional_chinese">Convert Simplified Chinese to Traditional</string>
+    <string name="lyrics_traditional_chinese_summary">Only converts Simplified Chinese characters. Keeps the original language.</string>
+    <string name="lyrics_import_no_track">Play a track with song information to import lyrics.</string>
+    <string name="background_settings_section">Background</string>
+    <string name="background_preview">%1$s background preview</string>
+    <string name="background_photo_for">Choose a photo for %1$s</string>
+    <string name="background_choose_photo">Choose photo</string>
+    <string name="background_change_photo">Change photo</string>
+    <string name="background_loading_photo">Importing photo…</string>
+    <string name="background_photo_failed">Unable to import the photo. Try another one.</string>
+    <string name="background_cancel_crop">Cancel crop</string>
+    <string name="background_crop_title">Crop background</string>
+    <string name="background_crop_preview">Background crop preview</string>
+    <string name="background_crop_hint">Drag to move the photo or pinch to zoom.</string>
+    <string name="background_zoom">Zoom</string>
+    <string name="background_save_photo">Save background</string>
+    <string name="background_saving_photo">Saving…</string>
+    <string name="background_reset_crop">Reset crop</string>
+    <string name="background_photo_saved">Background saved</string>
+    <string name="background_blur">Blur %1$d%%</string>
+    <string name="background_blur_for">%1$s background blur</string>
+    <string name="background_midnight">Midnight</string>
+    <string name="background_forest">Forest</string>
+    <string name="background_dusk">Dusk</string>
+    <string name="gps_acquiring">Finding a GPS signal…</string>
+    <string name="gps_disabled">Location is turned off.</string>
+    <string name="gps_unavailable">GPS is unavailable on this device.</string>
+    <string name="gps_permission_description">Allow precise location to display your GPS speed.</string>
+    <string name="gps_permission_button">Allow location access</string>
+    <string name="gps_settings_button">Open location settings</string>
+    <string name="gps_speed_unit" translatable="false">km/h</string>
+    <string name="notification_listener_name">OpenStandBy media access</string>
+    <string name="notification_access_title">Allow notification access</string>
+    <string name="notification_access_description">OpenStandBy uses this access to read the track and playback status from your music app. Return to OpenStandBy after granting access.</string>
+    <string name="notification_access_button">Open notification access settings</string>
+    <string name="notification_access_settings_unavailable">Notification access settings could not be opened.</string>
+    <string name="listener_connecting">Connecting to media services</string>
+    <string name="listener_connecting_description">Notification access is enabled. Reconnect if the current track is still missing.</string>
+    <string name="listener_reconnect">Reconnect</string>
+    <string name="no_active_session">No active media session</string>
+    <string name="no_active_session_description">Start a track in your music app to see it here.</string>
+    <string name="unknown_track">Unknown track</string>
+    <string name="album_artwork">Album cover</string>
+    <string name="album_artwork_unavailable">Album cover unavailable</string>
+    <string name="previous_track">Previous track</string>
+    <string name="play_track">Play</string>
+    <string name="pause_track">Pause</string>
+    <string name="next_track">Next track</string>
+    <string name="shuffle">Shuffle</string>
+    <string name="repeat">Repeat</string>
+    <string name="mode_on">On</string>
+    <string name="mode_off">Off</string>
+    <string name="repeat_all">All tracks</string>
+    <string name="repeat_one">One track</string>
+    <string name="playback_progress">Playback progress</string>
+    <string name="playback_progress_description">%1$s of %2$s</string>
+    <string name="show_lyrics">Show lyrics</string>
+    <string name="close_lyrics">Close lyrics</string>
+    <string name="show_controls">Show playback controls</string>
+    <string name="hide_controls">Hide playback controls</string>
+    <string name="retry_lyrics">Try again</string>
+    <string name="lyrics_options">Lyrics options</string>
+    <string name="lyrics_source">Source: %1$s</string>
+    <string name="lyrics_local_source">Local file</string>
+    <string name="lyrics_import_file">Import lyrics file</string>
+    <string name="lyrics_remove_local">Remove local lyrics</string>
+    <string name="lyrics_imported">Lyrics saved for this track</string>
+    <string name="lyrics_track_changed">The track changed. Open the picker again to import lyrics.</string>
+    <string name="lyrics_invalid_file">Unable to read the file. Choose a UTF-8 or UTF-16 LRC or TXT file.</string>
+    <string name="lyrics_remove_failed">Unable to remove local lyrics.</string>
+    <string name="lyrics_rate_limited">A lyrics service is busy. Try again shortly.</string>
+    <string name="lyrics_unavailable">Could not reach the lyrics services.</string>
+    <string name="lyrics_loading">Looking up lyrics…</string>
+    <string-array name="lyrics_not_found_messages">
+        <item>You caught us. We haven’t found the lyrics to this one yet.</item>
+        <item>This song is missing a lyric sheet.</item>
+        <item>No lyrics for this one. Humming is always an option.</item>
+        <item>We looked around, but these lyrics are still hiding.</item>
+    </string-array>
+    <string name="lyrics_instrumental">This track is instrumental.</string>
+    <string name="lyrics_missing_track_details">Track title or artist is unavailable.</string>
+    <string name="lyrics_plain">Unsynced lyrics</string>
+    <string name="playback_unknown">Playback status unavailable</string>
+    <string name="playback_idle">Idle</string>
+    <string name="playback_playing">Playing</string>
+    <string name="playback_paused">Paused</string>
+    <string name="playback_stopped">Stopped</string>
+    <string name="playback_buffering">Buffering</string>
+    <string name="playback_connecting">Connecting</string>
+    <string name="playback_fast_forwarding">Fast forwarding</string>
+    <string name="playback_rewinding">Rewinding</string>
+    <string name="playback_skipping">Skipping tracks</string>
+    <string name="playback_error">Playback error</string>
+</resources>

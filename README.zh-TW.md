@@ -47,3 +47,7 @@ Debug APK 位於 `app/build/outputs/apk/debug/app-debug.apk`。在 Windows 命�
 ## 特別感謝
 
 感謝 LRCLIB 團隊和貢獻者維護歌詞資料庫及 API，也感謝 LRCMux 維護者提供備援歌詞服務與相容於 LRCLIB 的 API。 [LRCLIB](https://lrclib.net/docs) · [LRCMux](https://lrcmux.dev/)
+
+## 授權
+
+OpenStandBy 自行開發的程式碼採用 MIT 授權。 [LICENSE](LICENSE)

@@ -47,3 +47,7 @@ The APK is at `app/build/outputs/apk/debug/app-debug.apk`. In Windows Command Pr
 ## Acknowledgements
 
 Thanks to the people maintaining LRCLIB's lyrics database and API, and to the LRCMux maintainers for providing the fallback service through an LRCLIB-compatible API. [LRCLIB](https://lrclib.net/docs) · [LRCMux](https://lrcmux.dev/)
+
+## License
+
+OpenStandBy's own source code is available under the MIT License. [LICENSE](LICENSE)

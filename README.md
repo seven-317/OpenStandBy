@@ -2,45 +2,48 @@
 
 [繁體中文](README.zh-TW.md)
 
-OpenStandBy turns an Android phone into a free, full-screen landscape dashboard for a desk dock or motorcycle mount. It opens on the music player, keeps the screen on, and lets you swipe straight to a clock or GPS speedometer.
+OpenStandBy is a free, full-screen landscape dashboard for Android. I built it for a phone sitting on a desk dock or in a motorcycle mount, where I want to see what's playing and reach the playback controls without reopening the music app.
 
-## What you can do
+The screen stays on while OpenStandBy is open. It starts on the player. Swipe up for the clock or down for the GPS speedometer.
 
-- **Music player** shows the current track, artist, and album art over a blurred artwork background. Large buttons handle previous, play and pause, and next. Seeking, shuffle, and repeat depend on the controls the music app exposes.
-- **Lyrics mode** opens with the microphone button. Timed lyrics highlight and follow the current line, and tapping a line seeks to its timestamp when the music app supports seeking. Tap the background to show the progress bar and playback controls.
-- **Clock** shows the time and date. Swipe up from the music player to open it.
-- **GPS speedometer** shows your current speed in km/h. Swipe down from the music player to open it.
+## Get it running
 
-Each screen has its own settings. The clock and speedometer can use different photos from your library. You can crop each photo to fit the landscape view and adjust its blur independently. The interface is available in English and Traditional Chinese (Taiwan).
-
-## First launch
+OpenStandBy runs on Android 9 (API 28) and newer. To install from source, open the repository root in Android Studio, set the Gradle JDK to 17, and install Android SDK Platform 36. Sync Gradle and run the `app` configuration on a connected phone or emulator.
 
 1. Open OpenStandBy and tap **Open notification access settings**. Enable access for OpenStandBy, then return to the app.
-2. Play a track in Spotify, YouTube Music, or another app that exposes an Android media session. OpenStandBy reads and controls that session without requiring its own account or API key.
-3. Open the GPS speedometer and grant precise location access when prompted if you want to use it.
+2. Start a track in Spotify, YouTube Music, or another app that exposes an Android media session. Return to OpenStandBy to see the track and control playback.
 
-If music is playing and the player stays on the Android connection screen, tap **Reconnect**.
+Notification access lets OpenStandBy connect to the media session Android already has. OpenStandBy needs no separate account or API key. If a track is playing and the app stays on the connection screen, tap **Reconnect**.
+
+## Player, clock, and speedometer
+
+- **Player.** See the track, artist, and cover over a blurred version of the album art. Use the large buttons to skip tracks or play and pause. Drag the progress bar when the music app supports seeking. Spotify shuffle and repeat are available when its session exposes those actions.
+- **Lyrics.** Tap the microphone to open lyrics or the × to return to the player. The current line is highlighted and scrolls into view. If the music app supports seeking, tap a timed line to jump to that point. Tap an empty part of the screen to show the playback controls and progress bar.
+- **Clock.** See the time and date in the phone's format.
+- **GPS speedometer.** Allow precise location on the speedometer screen. It displays your speed in km/h once it gets a GPS fix.
+
+The gear opens settings for the screen you're on. Set a separate photo for the clock and speedometer, frame it for landscape, and adjust the blur on each screen. The interface supports English and Traditional Chinese (Taiwan).
 
 ## Lyrics coverage
 
-OpenStandBy looks up the track in LRCLIB first and checks LRCMux for a fallback when it needs one. It displays plain lyrics when only untimed text is available. **Some tracks still have no matching lyrics in either service.**
+The player checks LRCLIB first and uses LRCMux as a fallback. It prefers timed lyrics and shows plain text when that's what's available. Even with both sources, some songs or recordings still have no matching lyrics.
 
-Use **Try again** to repeat the lookup, or import a local `.lrc` or `.txt` file from **Lyrics options** or the player settings. The imported file is saved for that track and takes priority. **Convert Simplified Chinese to Traditional** changes the script of Chinese lyrics on the device and preserves the original language.
+- **Try again** repeats the lookup. If you have the lyrics already, import a UTF-8 or UTF-16 `.lrc` or `.txt` file from **Lyrics options** or the player settings. The file is saved for that track and takes priority over online results.
+- **Convert Simplified Chinese to Traditional** is available in both menus. It changes Simplified Chinese characters on the device and leaves the lyrics in their original language.
 
-If you know a better lyrics source or a way to match more tracks reliably, please open an issue or send a pull request. A track title, artist, and recording version help reproduce a missed match. [Issues](https://github.com/seven-317/OpenStandBy/issues) · [Pull requests](https://github.com/seven-317/OpenStandBy/pulls)
+If you know a lyrics source that covers more songs or a better way to match recordings, open an issue or send a pull request. For a missed or incorrect match, include the track title, artist, and album or recording version. [Issues](https://github.com/seven-317/OpenStandBy/issues) · [Pull requests](https://github.com/seven-317/OpenStandBy/pulls)
 
-## Build from source
+## Build and test
 
-The app uses Kotlin, Jetpack Compose, and Material 3. It runs on Android 9 (API 28) and newer. To build it, open the repository root in Android Studio, sync Gradle, and use JDK 17 with Android SDK Platform 36.
+The app uses Kotlin, Jetpack Compose, and Material 3. From the repository root, run the Gradle wrapper to build the debug APK and check the app.
 
 ```sh
 ./gradlew :app:assembleDebug
 ./gradlew :app:testDebugUnitTest :app:lintDebug
 ```
 
-The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`. You can also run the `app` configuration from Android Studio on a connected phone or emulator. On Windows, use `gradlew.bat` in the commands above.
+The APK is at `app/build/outputs/apk/debug/app-debug.apk`. In Windows Command Prompt, use `gradlew.bat` in place of `./gradlew`.
 
 ## Acknowledgements
 
-- Thanks to the LRCLIB team and contributors for maintaining the primary lyrics database and API. [LRCLIB](https://lrclib.net/docs)
-- Thanks to the LRCMux maintainers for the fallback lyrics service and its LRCLIB-compatible API. [LRCMux](https://lrcmux.dev/)
+Thanks to the people maintaining LRCLIB's lyrics database and API, and to the LRCMux maintainers for providing the fallback service through an LRCLIB-compatible API. [LRCLIB](https://lrclib.net/docs) · [LRCMux](https://lrcmux.dev/)

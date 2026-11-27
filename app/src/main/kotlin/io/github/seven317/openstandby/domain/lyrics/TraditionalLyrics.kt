@@ -15,9 +15,15 @@ internal fun Lyrics.toTraditionalChinese(): Lyrics = when (this) {
 private val lyricTextLines = Regex("[^\\r\\n]+")
 
 internal fun String.toTraditionalLyricText(): String =
-    lyricTextLines.replace(this) { convertChineseLine(it.value) }
+    convertChineseLines(ZhConverterUtil::toTraditional)
 
-private fun convertChineseLine(line: String): String {
+internal fun String.toSimplifiedLyricText(): String =
+    convertChineseLines(ZhConverterUtil::toSimple)
+
+private fun String.convertChineseLines(convert: (String) -> String): String =
+    lyricTextLines.replace(this) { convertChineseLine(it.value, convert) }
+
+private fun convertChineseLine(line: String, convert: (String) -> String): String {
     var hasHan = false
     var index = 0
     while (index < line.length) {
@@ -30,5 +36,5 @@ private fun convertChineseLine(line: String): String {
         }
         index += Character.charCount(codePoint)
     }
-    return if (hasHan) ZhConverterUtil.toTraditional(line) else line
+    return if (hasHan) convert(line) else line
 }

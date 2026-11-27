@@ -6,6 +6,7 @@ import io.github.seven317.openstandby.domain.lyrics.LyricLine
 import io.github.seven317.openstandby.domain.lyrics.Lyrics
 import io.github.seven317.openstandby.domain.lyrics.LyricsSource
 import io.github.seven317.openstandby.domain.lyrics.ResolvedLyrics
+import io.github.seven317.openstandby.domain.lyrics.toSimplifiedLyricText
 import io.github.seven317.openstandby.domain.lyrics.toTraditionalLyricText
 import java.io.IOException
 import java.lang.Character.UnicodeScript
@@ -189,7 +190,8 @@ private fun LyricsTrack.matches(candidateTitle: String, candidateArtists: List<S
     return expected.mapNotNull { name -> names.singleOrNull { name.matchesArtist(it) } }.toSet().size == expected.size
 }
 
-private fun String.kugeciArtistKey(): String = lyricsMetadataKey().replace(artistFormatting, "")
+private fun String.kugeciArtistKey(): String =
+    normalizedLyricsMetadata().toSimplifiedLyricText().replace(artistFormatting, "")
 
 private fun String.matchesArtist(other: String): Boolean =
     this == other || this in other.bilingualArtistNames() || other in bilingualArtistNames()

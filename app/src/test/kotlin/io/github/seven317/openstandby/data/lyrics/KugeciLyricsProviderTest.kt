@@ -49,6 +49,25 @@ class KugeciLyricsProviderTest {
     }
 
     @Test
+    fun matchesArtistsWithDifferentChineseNameSpellings() = runBlocking {
+        val api = FakeApi(
+            results = mapOf("修炼爱情" to searchPage(
+                row("other-artist", "修炼爱情", "林俊峰"),
+                row("live", "修炼爱情 (Live)", "林俊杰"),
+                row("studio", "修炼爱情", "林俊杰"),
+            )),
+            detail = songPage("修炼爱情", "林俊杰", lrc = "[00:20]測試歌詞"),
+        )
+        val track = LyricsTrack("修煉愛情", "林俊傑", "因你 而在", 287)
+
+        assertEquals(
+            ResolvedLyrics(Lyrics.Timed(listOf(LyricLine(20_000, "測試歌詞"))), LyricsSource.Kugeci),
+            KugeciLyricsProvider(api, "OpenStandBy-test").lookup(track),
+        )
+        assertEquals(listOf("search:修煉愛情", "search:修炼爱情", "song:studio"), api.calls)
+    }
+
+    @Test
     fun matchesTheEpisodePerformanceOnlyWhenTheArtistsAndTimelinesAgree() = runBlocking {
         val performance = LyricsTrack(
             "飛躍經濟艙", "GAI周延, 功夫胖KUNGFU-PEN, 布瑞吉", "中國說唱巔峰對決 第九期", 213,

@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import io.github.seven317.openstandby.domain.lyrics.LrcParser
 import io.github.seven317.openstandby.domain.lyrics.Lyrics
+import io.github.seven317.openstandby.domain.lyrics.YrcParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -83,8 +84,10 @@ internal fun localLyricsKey(source: String, mediaId: String?, title: String?, ar
 internal fun parseLocalLyrics(text: String): Lyrics? {
     val clean = text.trim()
     if (clean.isEmpty() || clean.any { it.isISOControl() && it !in "\t\r\n" }) return null
-    val lines = LrcParser.parse(clean)
-    return if (lines.any { it.text.isNotBlank() }) Lyrics.Timed(lines) else Lyrics.Plain(clean)
+    val lrc = LrcParser.parse(clean)
+    if (lrc.any { it.text.isNotBlank() }) return Lyrics.Timed(lrc)
+    val yrc = YrcParser.parse(clean)
+    return if (yrc.any { it.text.isNotBlank() }) Lyrics.Timed(yrc) else Lyrics.Plain(clean)
 }
 
 private const val MAX_LYRICS_BYTES = 256 * 1024

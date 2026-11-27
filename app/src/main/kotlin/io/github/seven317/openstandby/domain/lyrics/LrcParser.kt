@@ -6,11 +6,11 @@ internal object LrcParser {
     private val wordTimestamp = Regex("""<\d{1,4}:[0-5]\d(?:[.:]\d{1,3})?>""")
 
     fun parse(lrc: String): List<LyricLine> {
-        val lines = lrc.lineSequence().map { it.trim().removePrefix("\uFEFF") }
+        val lines = lrc.lineSequence().map { it.trim().removePrefix("\uFEFF").trimStart() }
         val offsetMs = lines.firstNotNullOfOrNull { line ->
             offset.matchEntire(line)?.groupValues?.get(1)?.toIntOrNull()
         } ?: 0
-        val timedLines = sortedMapOf<Long, MutableList<String>>()
+        val timedLines = mutableMapOf<Long, MutableList<String>>()
 
         for (line in lines) {
             val times = mutableListOf<Long>()
@@ -30,8 +30,6 @@ internal object LrcParser {
             for (time in times) timedLines.getOrPut(time, ::mutableListOf).add(text)
         }
 
-        return timedLines.map { (time, texts) ->
-            LyricLine(time, texts.filter(String::isNotEmpty).distinct().joinToString("\n"))
-        }
+        return timedLines.toLyricLines()
     }
 }

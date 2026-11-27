@@ -35,6 +35,28 @@ class LrcParserTest {
     }
 
     @Test
+    fun expandedChorusKeepsAnIndependentPlaybackPositionForEachOccurrence() {
+        val lines = LrcParser.parse(
+            "\uFEFF  [00:08.10] [00:42.50]再唱一次\n" +
+                "[00:11.00][00:46.70]下一句\n" +
+                "[00:42.50]再唱一次\n" +
+                "[00:42.50]Sing it again",
+        )
+
+        assertEquals(
+            listOf(
+                LyricLine(8_100, "再唱一次"),
+                LyricLine(11_000, "下一句"),
+                LyricLine(42_500, "再唱一次\nSing it again"),
+                LyricLine(46_700, "下一句"),
+            ),
+            lines,
+        )
+        assertEquals(2, lines.activeIndexAt(42_500))
+        assertEquals(0, lines.activeIndexAt(8_100))
+    }
+
+    @Test
     fun selectsBoundariesAndHandlesBackwardSeek() {
         val lines = LrcParser.parse("[00:01.02]First\n[00:03.015]Second\n[00:06]")
 

@@ -83,7 +83,7 @@
     <string name="lyrics_remove_local">移除本機歌詞</string>
     <string name="lyrics_imported">已儲存這首歌的歌詞</string>
     <string name="lyrics_track_changed">曲目已切換。請重新開啟選檔畫面再匯入。</string>
-    <string name="lyrics_invalid_file">無法讀取檔案，請選擇 UTF-8 或 UTF-16 的 LRC 或 TXT。</string>
+    <string name="lyrics_invalid_file">無法讀取檔案，請選擇 UTF-8 或 UTF-16 的 LRC、YRC 或 TXT。</string>
     <string name="lyrics_remove_failed">無法移除本機歌詞。</string>
     <string name="lyrics_rate_limited">歌詞服務忙碌中，請稍後再試。</string>
     <string name="lyrics_unavailable">無法連線至歌詞服務。</string>

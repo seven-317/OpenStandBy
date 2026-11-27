@@ -87,7 +87,7 @@
     <string name="lyrics_remove_local">Remove local lyrics</string>
     <string name="lyrics_imported">Lyrics saved for this track</string>
     <string name="lyrics_track_changed">The track changed. Open the picker again to import lyrics.</string>
-    <string name="lyrics_invalid_file">Unable to read the file. Choose a UTF-8 or UTF-16 LRC or TXT file.</string>
+    <string name="lyrics_invalid_file">Unable to read the file. Choose a UTF-8 or UTF-16 LRC, YRC, or TXT file.</string>
     <string name="lyrics_remove_failed">Unable to remove local lyrics.</string>
     <string name="lyrics_rate_limited">A lyrics service is busy. Try again shortly.</string>
     <string name="lyrics_unavailable">Could not reach the lyrics services.</string>

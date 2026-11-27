@@ -109,7 +109,10 @@ class MainActivity : AppCompatActivity() {
                         val key = player.lyricsImportKey(trackId)
                         if (key != null) {
                             importKey = key
-                            openLyrics.launch(arrayOf("text/*", "application/octet-stream", "application/lrc", "application/x-lrc"))
+                            openLyrics.launch(arrayOf(
+                                "text/*", "application/octet-stream", "application/lrc", "application/x-lrc",
+                                "application/yrc", "application/x-yrc",
+                            ))
                         }
                     },
                     onRemoveLyrics = { trackId ->

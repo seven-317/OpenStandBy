@@ -16,6 +16,10 @@ internal data class ResolvedLyrics(val content: Lyrics, val source: LyricsSource
 
 internal data class LyricLine(val timestampMs: Long, val text: String)
 
+internal fun Map<Long, List<String>>.toLyricLines(): List<LyricLine> = toSortedMap().map { (time, texts) ->
+    LyricLine(time, texts.filter(String::isNotEmpty).distinct().joinToString("\n"))
+}
+
 internal fun List<LyricLine>.activeIndexAt(positionMs: Long): Int {
     val index = binarySearchBy(positionMs, selector = LyricLine::timestampMs)
     return if (index >= 0) index else -index - 2

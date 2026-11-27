@@ -38,6 +38,7 @@ class LyricsFallbackTest {
     @Test
     fun importedLyricsKeepTheirTimingOrPlainText() {
         assertEquals(Lyrics.Timed(listOf(LyricLine(1520, "測試歌詞"))), parseLocalLyrics("[00:01.52]測試歌詞"))
+        assertEquals(Lyrics.Timed(listOf(LyricLine(1_520, "測試歌詞"))), parseLocalLyrics("[1520,400](1520,400,0)測試歌詞"))
         assertEquals(Lyrics.Plain("測試歌詞"), parseLocalLyrics("測試歌詞"))
         assertNull(parseLocalLyrics("not\u0000text"))
     }

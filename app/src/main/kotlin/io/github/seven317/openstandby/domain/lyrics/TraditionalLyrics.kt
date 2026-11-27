@@ -14,7 +14,7 @@ internal fun Lyrics.toTraditionalChinese(): Lyrics = when (this) {
 
 private val lyricTextLines = Regex("[^\\r\\n]+")
 
-private fun String.toTraditionalLyricText(): String =
+internal fun String.toTraditionalLyricText(): String =
     lyricTextLines.replace(this) { convertChineseLine(it.value) }
 
 private fun convertChineseLine(line: String): String {

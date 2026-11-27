@@ -79,6 +79,7 @@
     <string name="lyrics_options">歌詞選項</string>
     <string name="lyrics_source">來源：%1$s</string>
     <string name="lyrics_local_source">本機檔案</string>
+    <string name="lyrics_netease_source">網易雲音樂</string>
     <string name="lyrics_import_file">匯入歌詞檔</string>
     <string name="lyrics_remove_local">移除本機歌詞</string>
     <string name="lyrics_imported">已儲存這首歌的歌詞</string>

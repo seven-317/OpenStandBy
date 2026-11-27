@@ -165,6 +165,7 @@ internal fun LyricsScreen(
                         val sourceName = when (source) {
                             LyricsSource.Lrclib -> "LRCLIB"
                             LyricsSource.LrcMux -> "LRCMux"
+                            LyricsSource.Netease -> stringResource(R.string.lyrics_netease_source)
                             LyricsSource.Local -> stringResource(R.string.lyrics_local_source)
                             null -> null
                         }

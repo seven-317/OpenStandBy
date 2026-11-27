@@ -23,9 +23,15 @@ import kotlin.random.Random
 
 internal data class LyricsTrack(val title: String, val artist: String, val album: String?, val durationSeconds: Int?)
 
-internal class LyricsRepository(primaryApi: LrclibApi, backupApi: LrclibApi, userAgent: String) {
+internal class LyricsRepository(
+    primaryApi: LrclibApi,
+    backupApi: LrclibApi,
+    userAgent: String,
+    neteaseApi: NeteaseLyricsApi? = null,
+) {
     private val primary = RemoteLyricsProvider(primaryApi, userAgent, LyricsSource.Lrclib)
     private val backup = RemoteLyricsProvider(backupApi, userAgent, LyricsSource.LrcMux)
+    private val netease = neteaseApi?.let(::NeteaseLyricsProvider)
     private val requests = Mutex()
     private val cache = LruCache<LyricsTrack, CachedLyrics>(40)
 
@@ -34,10 +40,15 @@ internal class LyricsRepository(primaryApi: LrclibApi, backupApi: LrclibApi, use
         if (!refresh) cache[track]?.takeIf { now < it.expiresAtMs }?.let { return@withLock it.result }
 
         val first = primary.lookup(track)
-        val result = if (first.content is Lyrics.Timed || first.content == Lyrics.Instrumental) {
+        val existing = if (first.content is Lyrics.Timed || first.content == Lyrics.Instrumental) {
             first
         } else {
             preferLyricResult(first, backup.lookup(track))
+        }
+        val result = if (netease == null || existing.content is Lyrics.Timed || existing.content == Lyrics.Instrumental) {
+            existing
+        } else {
+            preferLyricResult(existing, netease.lookup(track))
         }
         val ttl = when (result.content) {
             is Lyrics.Timed, Lyrics.Instrumental -> Long.MAX_VALUE
@@ -175,5 +186,5 @@ internal fun findTimedVersion(track: LyricsTrack, records: List<LrclibTrack>): L
 
 private val whitespace = Regex("\\s+")
 
-private fun String.normalizedLyricsMetadata(): String =
+internal fun String.normalizedLyricsMetadata(): String =
     Normalizer.normalize(this, Normalizer.Form.NFKC).trim().replace(whitespace, " ").lowercase(Locale.ROOT)

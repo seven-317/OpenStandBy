@@ -1,6 +1,21 @@
+import java.net.URI
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+}
+
+val neteaseLyricsBaseUrl = providers.gradleProperty("neteaseLyricsBaseUrl").orElse("").map { value ->
+    val url = value.trim()
+    if (url.isEmpty()) {
+        ""
+    } else {
+        val uri = URI(url)
+        require(uri.scheme == "https" && uri.host != null && uri.userInfo == null && uri.query == null && uri.fragment == null) {
+            "neteaseLyricsBaseUrl must be an HTTPS base URL without credentials, a query, or a fragment."
+        }
+        uri.toASCIIString().trimEnd('/') + "/"
+    }
 }
 
 android {
@@ -13,6 +28,7 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0.0"
+        buildConfigField("String", "NETEASE_LYRICS_BASE_URL", "\"${neteaseLyricsBaseUrl.get()}\"")
     }
 
     buildFeatures {

@@ -77,6 +77,7 @@
     <string name="hide_controls">隱藏操作列</string>
     <string name="retry_lyrics">重試</string>
     <string name="lyrics_options">歌詞選項</string>
+    <string name="lyrics_follow_playback">回到目前歌詞</string>
     <string name="lyrics_source">來源：%1$s</string>
     <string name="lyrics_local_source">本機檔案</string>
     <string name="lyrics_netease_source">網易雲音樂</string>

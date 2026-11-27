@@ -81,6 +81,7 @@
     <string name="hide_controls">Hide playback controls</string>
     <string name="retry_lyrics">Try again</string>
     <string name="lyrics_options">Lyrics options</string>
+    <string name="lyrics_follow_playback">Return to current lyric</string>
     <string name="lyrics_source">Source: %1$s</string>
     <string name="lyrics_local_source">Local file</string>
     <string name="lyrics_netease_source">NetEase Cloud Music</string>

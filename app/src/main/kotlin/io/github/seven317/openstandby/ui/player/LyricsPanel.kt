@@ -6,11 +6,11 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -33,7 +33,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -46,18 +48,28 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -144,11 +156,9 @@ internal fun LyricsScreen(
                 modifier = Modifier.weight(1f).fillMaxWidth().padding(bottom = bottomInset),
                 contentAlignment = Alignment.Center,
             ) {
-                Box(Modifier.widthIn(max = 680.dp).fillMaxSize()) {
-                    LyricsContent(playback, position, content, onRetry) { positionMs ->
-                        revealControls()
-                        onSeek(positionMs)
-                    }
+                LyricsContent(playback, position, content, onRetry) { positionMs ->
+                    revealControls()
+                    onSeek(positionMs)
                 }
             }
         }
@@ -266,15 +276,13 @@ private fun TimedLyrics(lines: List<LyricLine>, position: State<Long?>, canSeek:
         derivedStateOf { position.value?.let(lines::activeIndexAt) ?: -1 }
     }
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = activeIndex.coerceAtLeast(0))
-    val dragging by listState.interactionSource.collectIsDraggedAsState()
-    var followPlayback by remember { mutableStateOf(true) }
-
-    LaunchedEffect(dragging) {
-        if (dragging) {
-            followPlayback = false
-        } else if (!followPlayback) {
-            delay(3_000)
-            followPlayback = true
+    var followPlayback by rememberSaveable { mutableStateOf(true) }
+    val manualScroll = remember {
+        object : NestedScrollConnection {
+            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+                if (source == NestedScrollSource.UserInput && consumed.y != 0f) followPlayback = false
+                return Offset.Zero
+            }
         }
     }
     LaunchedEffect(activeIndex, followPlayback) {
@@ -284,7 +292,7 @@ private fun TimedLyrics(lines: List<LyricLine>, position: State<Long?>, canSeek:
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val centerPadding = (maxHeight / 2 - 29.dp).coerceAtLeast(0.dp)
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.align(Alignment.TopCenter).widthIn(max = 680.dp).fillMaxSize().nestedScroll(manualScroll),
             state = listState,
             contentPadding = PaddingValues(vertical = centerPadding),
             verticalArrangement = Arrangement.spacedBy(3.dp),
@@ -297,6 +305,35 @@ private fun TimedLyrics(lines: List<LyricLine>, position: State<Long?>, canSeek:
                         if (onSeek(line.timestampMs)) followPlayback = true
                     }
                 }
+            }
+        }
+        AnimatedVisibility(
+            visible = !followPlayback,
+            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 8.dp, bottom = 4.dp),
+            enter = fadeIn(tween(180)),
+            exit = fadeOut(tween(180)),
+        ) {
+            ResumeLyricsButton(onClick = { followPlayback = true })
+        }
+    }
+}
+
+@Composable
+private fun ResumeLyricsButton(onClick: () -> Unit) {
+    val label = stringResource(R.string.lyrics_follow_playback)
+    FilledTonalIconButton(onClick = onClick, modifier = Modifier.semantics { contentDescription = label }) {
+        val color = LocalContentColor.current
+        Canvas(Modifier.size(24.dp)) {
+            scale(size.width / 24f, size.height / 24f, pivot = Offset.Zero) {
+                val arrow = Path().apply {
+                    moveTo(19f, 6f)
+                    lineTo(19f, 13f)
+                    lineTo(5f, 13f)
+                    moveTo(10f, 8f)
+                    lineTo(5f, 13f)
+                    lineTo(10f, 18f)
+                }
+                drawPath(arrow, color, style = Stroke(2f, cap = StrokeCap.Round, join = StrokeJoin.Round))
             }
         }
     }
@@ -341,7 +378,8 @@ private fun LyricRow(text: String, active: Boolean, canSeek: Boolean, onClick: (
 @Composable
 private fun PlainLyrics(text: String) {
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = 8.dp, horizontal = 4.dp),
+        modifier = Modifier.widthIn(max = 680.dp).fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
@@ -371,7 +409,7 @@ private fun LyricsMessage(lyrics: Lyrics?, onRetry: () -> Unit) {
         })
     }
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+        modifier = Modifier.widthIn(max = 680.dp).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {

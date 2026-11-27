@@ -1,0 +1,114 @@
+name: Prepare APK release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_notes:
+        description: Initial release notes (optional, editable in the draft)
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: prepare-apk-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Install Android SDK
+        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+
+      - name: Build and verify signed APK
+        id: apk
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [[ -z "$ANDROID_KEYSTORE_BASE64" || -z "$ANDROID_KEYSTORE_PASSWORD" ||
+                -z "$ANDROID_KEY_ALIAS" || -z "$ANDROID_KEY_PASSWORD" ]]; then
+            echo "::error::Configure the four Android signing secrets before running this workflow."
+            exit 1
+          fi
+
+          export ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/openstandby-release.jks"
+          trap 'rm -f "$ANDROID_KEYSTORE_PATH"' EXIT
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$ANDROID_KEYSTORE_PATH"
+          ./gradlew :app:assembleRelease
+
+          output="app/build/outputs/apk/release"
+          version=$(jq -er '.elements[0].versionName' "$output/output-metadata.json")
+          filename=$(jq -er '.elements[0].outputFile' "$output/output-metadata.json")
+          if [[ ! "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "::error::Use a versionName in major.minor.patch format for stable releases."
+            exit 1
+          fi
+
+          "${ANDROID_HOME}/build-tools/36.0.0/apksigner" verify "$output/$filename"
+          tag="v$version"
+          apk="$RUNNER_TEMP/OpenStandBy-$tag.apk"
+          cp "$output/$filename" "$apk"
+          printf 'tag=%s\npath=%s\n' "$tag" "$apk" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare editable draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.apk.outputs.tag }}
+          APK: ${{ steps.apk.outputs.path }}
+          RELEASE_NOTES: ${{ inputs.release_notes }}
+        run: |
+          if tag_commit=$(git rev-parse -q --verify "refs/tags/$TAG^{commit}") && [[ "$tag_commit" != "$GITHUB_SHA" ]]; then
+            echo "::error::$TAG already points to another commit. Bump the app version for a new release."
+            exit 1
+          fi
+
+          existing=$(gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases?per_page=100" |
+            jq -c --arg tag "$TAG" 'flatten | map(select(.tag_name == $tag)) | sort_by(.draft) | first // empty')
+          if [[ -z "$existing" ]]; then
+            notes_args=(--generate-notes)
+            if [[ -n "$RELEASE_NOTES" ]]; then
+              notes_file="$RUNNER_TEMP/openstandby-release-notes.md"
+              printf '%s\n' "$RELEASE_NOTES" > "$notes_file"
+              notes_args=(--notes-file "$notes_file")
+            fi
+            release_url=$(gh release create "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" \
+              --draft --target "$GITHUB_SHA" --title "OpenStandBy $TAG" "${notes_args[@]}")
+          else
+            if ! jq -e --arg commit "$GITHUB_SHA" '.draft and .target_commitish == $commit' <<< "$existing" > /dev/null; then
+              echo "::error::$TAG already has a published release or a draft for another commit."
+              exit 1
+            fi
+
+            asset_name=${APK##*/}
+            if ! jq -e --arg name "$asset_name" 'any(.assets[]; .name == $name and .state == "uploaded")' <<< "$existing" > /dev/null; then
+              upload_url=$(jq -er '.upload_url | split("{")[0]' <<< "$existing")
+              gh api --method POST "$upload_url?name=$asset_name" --input "$APK" \
+                --header 'Content-Type: application/vnd.android.package-archive' --silent
+            fi
+            release_url=$(jq -er '.html_url' <<< "$existing")
+          fi
+
+          printf '### OpenStandBy %s\n\n[Open the draft release](%s) to edit the release notes and publish the signed APK.\n' \
+            "$TAG" "$release_url" >> "$GITHUB_STEP_SUMMARY"

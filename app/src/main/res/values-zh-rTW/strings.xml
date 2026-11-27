@@ -12,6 +12,15 @@
     <string name="back_to_module_settings">返回目前畫面的設定</string>
     <string name="global_settings_title">全域設定</string>
     <string name="interface_language">介面語言</string>
+    <string name="update_settings_title">App 更新</string>
+    <string name="update_current_version">目前版本 %1$s</string>
+    <string name="update_enable_notifications">啟用更新通知</string>
+    <string name="update_available_title">OpenStandBy 有新版本</string>
+    <string name="update_available_message">版本 %1$s 已在 GitHub 發布。</string>
+    <string name="update_view_release">前往 GitHub</string>
+    <string name="update_later">稍後</string>
+    <string name="update_release_unavailable">無法開啟版本發布頁面。</string>
+    <string name="update_notification_settings_unavailable">無法開啟更新通知設定。</string>
     <string name="language_system">跟隨系統</string>
     <string name="module_settings_title">%1$s設定</string>
     <string name="player_settings_title">播放器設定</string>

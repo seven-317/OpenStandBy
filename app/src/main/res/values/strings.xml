@@ -12,6 +12,15 @@
     <string name="close_settings">Close settings</string>
     <string name="back_to_module_settings">Back to screen settings</string>
     <string name="global_settings_title">Global settings</string>
+    <string name="update_settings_title">App updates</string>
+    <string name="update_current_version">Installed version %1$s</string>
+    <string name="update_enable_notifications">Enable update notifications</string>
+    <string name="update_available_title">OpenStandBy update available</string>
+    <string name="update_available_message">Version %1$s is available on GitHub.</string>
+    <string name="update_view_release">View on GitHub</string>
+    <string name="update_later">Later</string>
+    <string name="update_release_unavailable">Could not open the release page.</string>
+    <string name="update_notification_settings_unavailable">Could not open update notification settings.</string>
     <string name="interface_language">Interface language</string>
     <string name="language_system">Follow system</string>
     <string name="language_english" translatable="false">English</string>

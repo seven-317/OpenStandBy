@@ -63,6 +63,7 @@ internal fun StandByPager(
     backgroundStore: StandByBackgroundStore,
     appLanguage: AppLanguage,
     onAppLanguageChange: (AppLanguage) -> Unit,
+    updateSettings: @Composable () -> Unit,
     clockFace: ClockFace,
     onClockFaceChange: (ClockFace) -> Unit,
     onOpenNotificationSettings: () -> Unit,
@@ -101,7 +102,12 @@ internal fun StandByPager(
     if (settingsModule != null) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             if (globalSettingsOpen) {
-                GlobalSettings(appLanguage, onAppLanguageChange, onBack = { globalSettingsOpen = false })
+                GlobalSettings(
+                    appLanguage,
+                    onAppLanguageChange,
+                    onBack = { globalSettingsOpen = false },
+                    updateSettings = updateSettings,
+                )
                 return@Surface
             }
             val openGlobalSettings = { globalSettingsOpen = true }

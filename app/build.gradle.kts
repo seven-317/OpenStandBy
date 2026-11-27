@@ -18,6 +18,8 @@ val neteaseLyricsBaseUrl = providers.gradleProperty("neteaseLyricsBaseUrl").orEl
     }
 }
 
+val releaseKeystorePath = providers.environmentVariable("ANDROID_KEYSTORE_PATH")
+
 android {
     namespace = "io.github.seven317.openstandby"
     compileSdk = 36
@@ -29,6 +31,16 @@ android {
         versionCode = 1
         versionName = "1.0.0"
         buildConfigField("String", "NETEASE_LYRICS_BASE_URL", "\"${neteaseLyricsBaseUrl.get()}\"")
+    }
+
+    if (releaseKeystorePath.isPresent) {
+        val releaseSigning = signingConfigs.create("release") {
+            storeFile = file(releaseKeystorePath.get())
+            storePassword = providers.environmentVariable("ANDROID_KEYSTORE_PASSWORD").get()
+            keyAlias = providers.environmentVariable("ANDROID_KEY_ALIAS").get()
+            keyPassword = providers.environmentVariable("ANDROID_KEY_PASSWORD").get()
+        }
+        buildTypes.getByName("release").signingConfig = releaseSigning
     }
 
     buildFeatures {
@@ -48,6 +60,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.work.runtime)
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.animation)

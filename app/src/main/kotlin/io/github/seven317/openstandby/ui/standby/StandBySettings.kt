@@ -69,7 +69,9 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.seven317.openstandby.AppLanguage
+import io.github.seven317.openstandby.BuildConfig
 import io.github.seven317.openstandby.R
+import io.github.seven317.openstandby.data.updates.AppUpdate
 import io.github.seven317.openstandby.ui.player.TraditionalLyricsSwitch
 import kotlin.math.PI
 import kotlin.math.cos
@@ -206,7 +208,12 @@ internal fun PlayerSettings(
 }
 
 @Composable
-internal fun GlobalSettings(language: AppLanguage, onLanguageChange: (AppLanguage) -> Unit, onBack: () -> Unit) {
+internal fun GlobalSettings(
+    language: AppLanguage,
+    onLanguageChange: (AppLanguage) -> Unit,
+    onBack: () -> Unit,
+    updateSettings: @Composable () -> Unit,
+) {
     SettingsPage(stringResource(R.string.global_settings_title), onBack, backLabel = R.string.back_to_module_settings) {
         Surface(
             modifier = Modifier.fillMaxWidth(),
@@ -232,6 +239,41 @@ internal fun GlobalSettings(language: AppLanguage, onLanguageChange: (AppLanguag
                             Text(stringResource(option.label), style = MaterialTheme.typography.bodyLarge)
                         }
                     }
+                }
+            }
+        }
+        updateSettings()
+    }
+}
+
+@Composable
+internal fun UpdateSettings(
+    availableUpdate: AppUpdate?,
+    notificationsEnabled: Boolean,
+    onOpenRelease: (AppUpdate) -> Unit,
+    onEnableNotifications: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        color = Color(0xFF20252D),
+        contentColor = MaterialTheme.colorScheme.onSurface,
+    ) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(stringResource(R.string.update_settings_title), style = MaterialTheme.typography.titleLarge)
+            Text(
+                stringResource(R.string.update_current_version, BuildConfig.VERSION_NAME),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            if (availableUpdate != null) {
+                Text(stringResource(R.string.update_available_message, availableUpdate.tag))
+                Button(onClick = { onOpenRelease(availableUpdate) }) {
+                    Text(stringResource(R.string.update_view_release))
+                }
+            }
+            if (!notificationsEnabled) {
+                OutlinedButton(onClick = onEnableNotifications) {
+                    Text(stringResource(R.string.update_enable_notifications))
                 }
             }
         }

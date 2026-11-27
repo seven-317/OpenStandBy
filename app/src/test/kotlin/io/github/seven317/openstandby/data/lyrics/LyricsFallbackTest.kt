@@ -27,6 +27,23 @@ class LyricsFallbackTest {
     }
 
     @Test
+    fun matchesLiveTitleFormatsAndKeepsEachAlbumOnItsOwnTimeline() {
+        val concert = LyricsTrack("男孩（Live）", "梁博", "尖叫之夜", 329)
+        val tv = LyricsTrack("男孩 - Live", "梁博", "歌手2017 (第十期 Live)", 311)
+        val misleading = record(artist = "梁博", duration = 329.0, synced = "[00:16.48]測試歌詞")
+            .copy(title = "男孩(Live)", album = "尖叫之夜 - Single")
+        val correctConcert = misleading.copy(title = "男孩 (Live)", album = concert.album, duration = 330.0, synced = "[00:30.43]測試歌詞")
+        val correctTv = misleading.copy(title = "男孩 (Live)", album = tv.album, duration = 312.0, synced = "[00:16.80]測試歌詞")
+        val records = listOf(misleading, correctTv, correctConcert)
+
+        assertFalse(misleading.matchesTrack(concert))
+        assertFalse(correctConcert.copy(album = null).matchesTrack(concert))
+        assertFalse(correctConcert.copy(title = "男孩").matchesTrack(concert))
+        assertEquals(Lyrics.Timed(listOf(LyricLine(30_430, "測試歌詞"))), findTimedVersion(concert, records))
+        assertEquals(Lyrics.Timed(listOf(LyricLine(16_800, "測試歌詞"))), findTimedVersion(tv, records))
+    }
+
+    @Test
     fun rejectsDifferentTitleArtistOrDurationEvenForAnExactLookupResponse() {
         val track = LyricsTrack("梗 概 (pt.2)", "加木", null, 160)
         val response = record(duration = 160.0, synced = "[00:02]測試歌詞").copy(title = track.title, artist = track.artist)
@@ -37,20 +54,6 @@ class LyricsFallbackTest {
         assertFalse(response.copy(duration = 166.0).matchesTrack(track))
         assertFalse(response.copy(duration = null).matchesTrack(track))
         assertTrue(response.copy(duration = null).matchesTrack(track.copy(durationSeconds = null)))
-    }
-
-    @Test
-    fun keepsLyricsThatAgreeWithKugeciAndOverridesDifferentContentEvenWithMatchingMetadata() {
-        val reference = ResolvedLyrics(
-            timed("雨停以後", "再看一次天空", "獨自回到家", "坐在窗戶旁邊", "等到太陽升起"),
-            LyricsSource.Kugeci,
-        )
-        val sameSong = timed("雨停以后，", "再看一次天空。", "獨自回到家", "坐在窗戶旁邊", "等到太陽升起")
-        val differentSong = timed("風把門吹開", "我帶著行李", "沿著公路往前走", "街上行人來去", "始終找不到出口")
-
-        assertNull(kugeciOverride(sameSong, reference))
-        assertEquals(reference, kugeciOverride(differentSong, reference))
-        assertNull(kugeciOverride(differentSong, ResolvedLyrics(Lyrics.NotFound)))
     }
 
     @Test
@@ -66,15 +69,16 @@ class LyricsFallbackTest {
     }
 
     @Test
-    fun queriesKugeciForPlainOrMissingLyricsAndKeepsEarlierTimedOrInstrumentalResults() = runBlocking {
+    fun usesKugeciTimedLyricsImmediatelyAndFallsBackWhenMissing() = runBlocking {
         val plain = ResolvedLyrics(Lyrics.Plain("Lyrics"), LyricsSource.Lrclib)
         val timed = ResolvedLyrics(Lyrics.Timed(listOf(LyricLine(1_000, "Lyrics"))), LyricsSource.LrcMux)
         val instrumental = ResolvedLyrics(Lyrics.Instrumental, LyricsSource.Lrclib)
         val kugeci = timed.copy(source = LyricsSource.Kugeci)
         val notFound = ResolvedLyrics(Lyrics.NotFound)
 
-        assertEquals(kugeci, plain.withFallback { kugeci })
-        assertEquals(kugeci, notFound.withFallback { kugeci })
+        assertEquals(kugeci, kugeci.withFallback { error("Kugeci timed lyrics should stop the lookup") })
+        assertEquals(timed, notFound.withFallback { timed })
+        assertEquals(timed, plain.withFallback { timed })
         assertEquals(plain, plain.withFallback { notFound })
         assertEquals(timed, timed.withFallback { error("Timed lyrics should stop the lookup") })
         assertEquals(instrumental, instrumental.withFallback { error("Instrumental tracks should stop the lookup") })
@@ -99,7 +103,4 @@ class LyricsFallbackTest {
 
     private fun record(artist: String = "Artist", duration: Double, synced: String?) =
         LrclibTrack(synced, "Lyrics", "Song", artist, "Album", duration, instrumental = false)
-
-    private fun timed(vararg lines: String) =
-        Lyrics.Timed(lines.mapIndexed { index, line -> LyricLine(index * 1_000L, line) })
 }

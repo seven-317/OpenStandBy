@@ -6,7 +6,6 @@ import io.github.seven317.openstandby.domain.lyrics.Lyrics
 import io.github.seven317.openstandby.domain.lyrics.LyricsSource
 import io.github.seven317.openstandby.domain.lyrics.ResolvedLyrics
 import io.github.seven317.openstandby.domain.lyrics.YrcParser
-import io.github.seven317.openstandby.domain.lyrics.toTraditionalLyricText
 import java.io.IOException
 import kotlin.math.abs
 import kotlinx.coroutines.Dispatchers
@@ -80,27 +79,26 @@ internal fun NeteaseLyricResponse.toLyrics(): Lyrics {
 }
 
 internal fun findNeteaseSongId(track: LyricsTrack, songs: List<NeteaseSong>): Long? {
-    val title = track.title.neteaseMatchKey()
-    val artist = track.artist.neteaseMatchKey()
+    val title = track.title.lyricsTitleKey()
+    val artist = track.artist.lyricsMetadataKey()
     if (title.isEmpty() || artist.isEmpty()) return null
-    val album = track.album?.neteaseMatchKey()?.takeIf(String::isNotEmpty)
+    val album = track.album?.lyricsMetadataKey()?.takeIf(String::isNotEmpty)
     val duration = track.durationSeconds?.toLong()?.times(1_000)
     val artistParts = artist.split(artistSeparator).map(String::trim).filter(String::isNotEmpty)
     val matches = songs.filter { song ->
-        if (song.id == null || song.id <= 0 || song.name?.neteaseMatchKey() != title) return@filter false
-        val names = song.artists.orEmpty().mapNotNull { it?.name?.neteaseMatchKey() }
+        if (song.id == null || song.id <= 0 || song.name?.lyricsTitleKey() != title) return@filter false
+        if (!track.matchesLiveAlbum(song.album?.name)) return@filter false
+        val names = song.artists.orEmpty().mapNotNull { it?.name?.lyricsMetadataKey() }
         if (artist !in names && (artistParts.size < 2 || !names.containsAll(artistParts))) return@filter false
         if (duration == null) return@filter true
         val reported = song.durationMs?.takeIf { it > 0 } ?: return@filter false
         abs(reported - duration) <= 4_000
     }.distinctBy(NeteaseSong::id)
 
-    val albumMatches = if (album == null) emptyList() else matches.filter { it.album?.name?.neteaseMatchKey() == album }
+    val albumMatches = if (album == null) emptyList() else matches.filter { it.album?.name?.lyricsMetadataKey() == album }
     val candidates = albumMatches.ifEmpty { matches }
     if (duration == null) return candidates.singleOrNull()?.id
     return candidates.minByOrNull { abs(checkNotNull(it.durationMs) - duration) }?.id
 }
 
 private val artistSeparator = Regex("""[,、;]|\s+[/&]\s+""")
-
-private fun String.neteaseMatchKey(): String = normalizedLyricsMetadata().toTraditionalLyricText()

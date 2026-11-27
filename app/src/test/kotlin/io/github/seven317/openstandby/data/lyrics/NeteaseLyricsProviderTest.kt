@@ -29,6 +29,15 @@ class NeteaseLyricsProviderTest {
     }
 
     @Test
+    fun selectsLiveTitleAliasOnlyFromTheMatchingAlbum() {
+        val live = track.copy(title = "測試歌（Live）")
+        val sameAlbum = song(id = 2L, duration = 207_000).copy(name = "测试歌 - Live")
+        val wrongAlbum = song(id = 1L, album = "別的現場").copy(name = "测试歌 (Live)")
+        assertEquals(2L, findNeteaseSongId(live, listOf(wrongAlbum, sameAlbum)))
+        assertNull(findNeteaseSongId(live, listOf(wrongAlbum)))
+    }
+
+    @Test
     fun usesTheSearchResultIdAndKeepsEachRepeatFromYrc() = runBlocking {
         val api = FakeApi(
             detailed = Response.success(NeteaseLyricResponse(200, section("""

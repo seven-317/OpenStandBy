@@ -7,7 +7,6 @@ import io.github.seven317.openstandby.domain.lyrics.LrcParser
 import io.github.seven317.openstandby.domain.lyrics.Lyrics
 import io.github.seven317.openstandby.domain.lyrics.LyricsSource
 import io.github.seven317.openstandby.domain.lyrics.ResolvedLyrics
-import io.github.seven317.openstandby.domain.lyrics.toTraditionalLyricText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
@@ -16,8 +15,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import retrofit2.Response
 import java.io.IOException
-import java.text.Normalizer
-import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import kotlin.random.Random
@@ -25,16 +22,16 @@ import kotlin.random.Random
 internal data class LyricsTrack(val title: String, val artist: String, val album: String?, val durationSeconds: Int?)
 
 internal class LyricsRepository(
-    primaryApi: LrclibApi,
-    backupApi: LrclibApi,
+    lrclibApi: LrclibApi,
+    lrcMuxApi: LrclibApi,
     userAgent: String,
     kugeciApi: KugeciLyricsApi,
     neteaseApi: NeteaseLyricsApi? = null,
 ) {
-    private val primary = RemoteLyricsProvider(primaryApi, userAgent, LyricsSource.Lrclib)
-    private val backup = RemoteLyricsProvider(backupApi, userAgent, LyricsSource.LrcMux)
-    private val netease = neteaseApi?.let(::NeteaseLyricsProvider)
     private val kugeci = KugeciLyricsProvider(kugeciApi, userAgent)
+    private val lrclib = RemoteLyricsProvider(lrclibApi, userAgent, LyricsSource.Lrclib)
+    private val netease = neteaseApi?.let(::NeteaseLyricsProvider)
+    private val lrcMux = RemoteLyricsProvider(lrcMuxApi, userAgent, LyricsSource.LrcMux)
     private val requests = Mutex()
     private val cache = LruCache<LyricsTrack, CachedLyrics>(40)
 
@@ -42,16 +39,10 @@ internal class LyricsRepository(
         val now = SystemClock.elapsedRealtime()
         if (!refresh) cache[track]?.takeIf { now < it.expiresAtMs }?.let { return@withLock it.result }
 
-        val initial = primary.lookup(track).withFallback { backup.lookup(track) }
-        val result = if (initial.source == LyricsSource.LrcMux && initial.content is Lyrics.Timed) {
-            val reference = kugeci.lookup(track)
-            val verified = withContext(Dispatchers.Default) { kugeciOverride(initial.content, reference) }
-            verified?.let {
-                netease?.lookup(track)?.takeIf { it.content is Lyrics.Timed } ?: verified
-            } ?: initial
-        } else {
-            initial.withFallback { netease?.lookup(track) }.withFallback { kugeci.lookup(track) }
-        }
+        val result = kugeci.lookup(track)
+            .withFallback { lrclib.lookup(track) }
+            .withFallback { netease?.lookup(track) }
+            .withFallback { lrcMux.lookup(track) }
         val ttl = when (result.content) {
             is Lyrics.Timed, Lyrics.Instrumental -> Long.MAX_VALUE
             is Lyrics.Plain, Lyrics.NotFound -> SystemClock.elapsedRealtime() + 300_000
@@ -99,7 +90,9 @@ private class RemoteLyricsProvider(
 
     private suspend fun fetch(track: LyricsTrack): Lyrics = try {
         val precise = request(track, track.album)
-        val response = if (precise.code() == 404 && track.album != null && source == LyricsSource.Lrclib) {
+        val response = if (precise.code() == 404 && track.album != null &&
+            source == LyricsSource.Lrclib && !track.requiresLiveAlbumMatch
+        ) {
             precise.errorBody()?.close()
             request(track, album = null)
         } else precise
@@ -173,11 +166,11 @@ private class RemoteLyricsProvider(
 
 internal fun findTimedVersion(track: LyricsTrack, records: List<LrclibTrack>): Lyrics.Timed? {
     val duration = track.durationSeconds ?: return null
-    val album = track.album?.normalizedLyricsMetadata()
+    val album = track.album?.lyricsMetadataKey()
     return records.asSequence()
         .filter { !it.instrumental && !it.synced.isNullOrBlank() && it.matchesTrack(track) }
         .sortedWith(compareBy<LrclibTrack> { abs(checkNotNull(it.duration) - duration) }
-            .thenBy { album != null && it.album?.normalizedLyricsMetadata() != album })
+            .thenBy { album != null && it.album?.lyricsMetadataKey() != album })
         .firstNotNullOfOrNull { record ->
             val lines = LrcParser.parse(checkNotNull(record.synced))
             if (lines.any { it.text.isNotBlank() }) Lyrics.Timed(lines) else null
@@ -185,34 +178,12 @@ internal fun findTimedVersion(track: LyricsTrack, records: List<LrclibTrack>): L
 }
 
 internal fun LrclibTrack.matchesTrack(track: LyricsTrack): Boolean {
-    val expectedTitle = track.title.normalizedLyricsMetadata().toTraditionalLyricText()
-    val expectedArtist = track.artist.normalizedLyricsMetadata().toTraditionalLyricText()
-    if (expectedTitle.isBlank() || expectedTitle != title?.normalizedLyricsMetadata()?.toTraditionalLyricText()) return false
-    if (expectedArtist.isBlank() || expectedArtist != artist?.normalizedLyricsMetadata()?.toTraditionalLyricText()) return false
+    val expectedTitle = track.title.lyricsTitleKey()
+    val expectedArtist = track.artist.lyricsMetadataKey()
+    if (expectedTitle.isBlank() || expectedTitle != title?.lyricsTitleKey()) return false
+    if (expectedArtist.isBlank() || expectedArtist != artist?.lyricsMetadataKey()) return false
+    if (!track.matchesLiveAlbum(album)) return false
     val expectedDuration = track.durationSeconds ?: return true
     val reportedDuration = duration?.takeIf { it.isFinite() && it > 0 } ?: return false
     return abs(reportedDuration - expectedDuration) <= 4
 }
-
-internal fun kugeciOverride(candidate: Lyrics.Timed, reference: ResolvedLyrics): ResolvedLyrics? {
-    val referenceLyrics = reference.content as? Lyrics.Timed ?: return null
-    val candidateLines = candidate.comparableLines()
-    val referenceLines = referenceLyrics.comparableLines()
-    val smallerCount = minOf(candidateLines.size, referenceLines.size)
-    // LRCMux can return correct catalog metadata with another song's lyrics.
-    // Keep its timing if the two sources share a meaningful amount of text.
-    if (smallerCount < 5 || candidateLines.count { it in referenceLines } * 5 >= smallerCount) return null
-    return reference
-}
-
-private val nonLyricCharacters = Regex("""[^\p{L}\p{N}]""")
-
-private fun Lyrics.Timed.comparableLines(): Set<String> = lines.asSequence()
-    .map { it.text.normalizedLyricsMetadata().toTraditionalLyricText().replace(nonLyricCharacters, "") }
-    .filter { it.length >= 4 }
-    .toSet()
-
-private val whitespace = Regex("\\s+")
-
-internal fun String.normalizedLyricsMetadata(): String =
-    Normalizer.normalize(this, Normalizer.Form.NFKC).trim().replace(whitespace, " ").lowercase(Locale.ROOT)

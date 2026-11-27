@@ -10,6 +10,12 @@
     <string name="speed_module">GPS speedometer</string>
     <string name="settings_title">Settings</string>
     <string name="close_settings">Close settings</string>
+    <string name="back_to_module_settings">Back to screen settings</string>
+    <string name="global_settings_title">Global settings</string>
+    <string name="interface_language">Interface language</string>
+    <string name="language_system">Follow system</string>
+    <string name="language_english" translatable="false">English</string>
+    <string name="language_traditional_chinese" translatable="false">繁體中文（台灣）</string>
     <string name="module_settings_title">%1$s settings</string>
     <string name="player_settings_title">Player settings</string>
     <string name="player_lyrics_settings">Lyrics</string>

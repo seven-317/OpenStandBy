@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.seven317.openstandby.AppLanguage
 import io.github.seven317.openstandby.R
 import io.github.seven317.openstandby.data.media.MediaSessionState
 import io.github.seven317.openstandby.data.media.PlaybackCommand
@@ -60,6 +61,8 @@ internal fun StandByPager(
     traditionalLyrics: Boolean,
     onTraditionalLyricsChange: (Boolean) -> Unit,
     backgroundStore: StandByBackgroundStore,
+    appLanguage: AppLanguage,
+    onAppLanguageChange: (AppLanguage) -> Unit,
     clockFace: ClockFace,
     onClockFaceChange: (ClockFace) -> Unit,
     onOpenNotificationSettings: () -> Unit,
@@ -72,6 +75,7 @@ internal fun StandByPager(
     onRemoveLyrics: (Long) -> Unit,
 ) {
     var settingsPage by rememberSaveable { mutableStateOf<StandByPage?>(null) }
+    var globalSettingsOpen by rememberSaveable { mutableStateOf(false) }
     val pager = remember {
         PagerState(currentPage = (settingsPage ?: StandByPage.Music).ordinal) { StandByPage.entries.size }
     }
@@ -86,6 +90,7 @@ internal fun StandByPager(
     }
     BackHandler(enabled = settingsPage != null || currentPage != StandByPage.Music || onLyricsPage) {
         when {
+            globalSettingsOpen -> globalSettingsOpen = false
             settingsPage != null -> closeSettings()
             onLyricsPage -> onToggleLyrics()
             else -> scope.launch { pager.animateScrollToPage(StandByPage.Music.ordinal) }
@@ -95,6 +100,11 @@ internal fun StandByPager(
     val settingsModule = settingsPage
     if (settingsModule != null) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            if (globalSettingsOpen) {
+                GlobalSettings(appLanguage, onAppLanguageChange, onBack = { globalSettingsOpen = false })
+                return@Surface
+            }
+            val openGlobalSettings = { globalSettingsOpen = true }
             when (settingsModule) {
                 StandByPage.Music -> {
                     val playback = (mediaState as? MediaSessionState.Active)?.playback?.takeIf { hasNotificationAccess }
@@ -106,6 +116,7 @@ internal fun StandByPager(
                         traditionalLyrics = traditionalLyrics,
                         onTraditionalLyricsChange = onTraditionalLyricsChange,
                         onImportLyrics = importId?.let { id -> { onImportLyrics(id) } },
+                        onOpenGlobalSettings = openGlobalSettings,
                         onBack = closeSettings,
                     )
                 }
@@ -117,6 +128,7 @@ internal fun StandByPager(
                         onPreset = backgroundStore::selectPreset,
                         onBlur = backgroundStore::setBlur,
                         onSavePhoto = backgroundStore::savePhoto,
+                        onOpenGlobalSettings = openGlobalSettings,
                         onBack = closeSettings,
                     ) {
                         if (target == BackgroundTarget.Clock) {

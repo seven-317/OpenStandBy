@@ -9,6 +9,10 @@
     <string name="speed_module">GPS 時速</string>
     <string name="settings_title">設定</string>
     <string name="close_settings">關閉設定</string>
+    <string name="back_to_module_settings">返回目前畫面的設定</string>
+    <string name="global_settings_title">全域設定</string>
+    <string name="interface_language">介面語言</string>
+    <string name="language_system">跟隨系統</string>
     <string name="module_settings_title">%1$s設定</string>
     <string name="player_settings_title">播放器設定</string>
     <string name="player_lyrics_settings">歌詞</string>

@@ -3,6 +3,7 @@ package io.github.seven317.openstandby.ui.standby
 import android.graphics.Bitmap
 import android.net.Uri
 import android.widget.Toast
+import androidx.annotation.StringRes
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -22,6 +24,8 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -30,6 +34,8 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -53,6 +59,7 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -61,6 +68,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import io.github.seven317.openstandby.AppLanguage
 import io.github.seven317.openstandby.R
 import io.github.seven317.openstandby.ui.player.TraditionalLyricsSwitch
 import kotlin.math.PI
@@ -76,6 +84,7 @@ internal fun StandByBackgroundSettings(
     onPreset: (BackgroundTarget, StandByBackground) -> Unit,
     onBlur: (BackgroundTarget, Int) -> Unit,
     onSavePhoto: suspend (BackgroundTarget, Bitmap, IntRect) -> Boolean,
+    onOpenGlobalSettings: () -> Unit,
     onBack: () -> Unit,
     displaySettings: @Composable () -> Unit,
 ) {
@@ -109,7 +118,11 @@ internal fun StandByBackgroundSettings(
         return
     }
 
-    ModuleSettingsPage(stringResource(R.string.module_settings_title, stringResource(target.title)), onBack) {
+    SettingsPage(
+        title = stringResource(R.string.module_settings_title, stringResource(target.title)),
+        onBack = onBack,
+        onOpenGlobalSettings = onOpenGlobalSettings,
+    ) {
         displaySettings()
         BackgroundSettings(
             target = target,
@@ -160,9 +173,10 @@ internal fun PlayerSettings(
     traditionalLyrics: Boolean,
     onTraditionalLyricsChange: (Boolean) -> Unit,
     onImportLyrics: (() -> Unit)?,
+    onOpenGlobalSettings: () -> Unit,
     onBack: () -> Unit,
 ) {
-    ModuleSettingsPage(stringResource(R.string.player_settings_title), onBack) {
+    SettingsPage(stringResource(R.string.player_settings_title), onBack, onOpenGlobalSettings = onOpenGlobalSettings) {
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
@@ -192,7 +206,46 @@ internal fun PlayerSettings(
 }
 
 @Composable
-private fun ModuleSettingsPage(title: String, onBack: () -> Unit, content: @Composable () -> Unit) {
+internal fun GlobalSettings(language: AppLanguage, onLanguageChange: (AppLanguage) -> Unit, onBack: () -> Unit) {
+    SettingsPage(stringResource(R.string.global_settings_title), onBack, backLabel = R.string.back_to_module_settings) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            color = Color(0xFF20252D),
+            contentColor = MaterialTheme.colorScheme.onSurface,
+        ) {
+            Column(Modifier.padding(14.dp)) {
+                Text(stringResource(R.string.interface_language), style = MaterialTheme.typography.titleLarge)
+                Column(Modifier.selectableGroup()) {
+                    for (option in AppLanguage.entries) {
+                        val selected = language == option
+                        Row(
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).selectable(
+                                selected = selected,
+                                role = Role.RadioButton,
+                                onClick = { onLanguageChange(option) },
+                            ),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(selected = selected, onClick = null)
+                            Text(stringResource(option.label), style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettingsPage(
+    title: String,
+    onBack: () -> Unit,
+    @StringRes backLabel: Int = R.string.close_settings,
+    onOpenGlobalSettings: (() -> Unit)? = null,
+    content: @Composable () -> Unit,
+) {
     Box(
         modifier = Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 24.dp, vertical = 12.dp),
         contentAlignment = Alignment.TopCenter,
@@ -202,11 +255,16 @@ private fun ModuleSettingsPage(title: String, onBack: () -> Unit, content: @Comp
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                val backLabel = stringResource(R.string.close_settings)
-                IconButton(onClick = onBack, modifier = Modifier.semantics { contentDescription = backLabel }) {
+                val description = stringResource(backLabel)
+                IconButton(onClick = onBack, modifier = Modifier.semantics { contentDescription = description }) {
                     StandByControlIcon(settings = false)
                 }
                 Text(title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
+            }
+            if (onOpenGlobalSettings != null) {
+                OutlinedButton(onClick = onOpenGlobalSettings) {
+                    Text(stringResource(R.string.global_settings_title))
+                }
             }
             content()
         }

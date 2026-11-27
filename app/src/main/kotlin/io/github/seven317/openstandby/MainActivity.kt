@@ -7,10 +7,11 @@ import android.os.Bundle
 import android.provider.Settings
 import android.view.WindowManager
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.getValue
@@ -20,9 +21,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.core.os.LocaleListCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.seven317.openstandby.ui.player.LyricsImportResult
@@ -32,7 +36,7 @@ import io.github.seven317.openstandby.ui.standby.StandByBackgroundStore
 import io.github.seven317.openstandby.ui.standby.StandByPager
 import kotlinx.coroutines.launch
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     private val mediaRepository by lazy {
         (application as OpenStandByApplication).container.mediaSessionRepository
     }
@@ -47,6 +51,10 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             MaterialTheme(colorScheme = PlayerColors) {
+                var appLanguage by remember { mutableStateOf(AppLanguage.fromLocales(AppCompatDelegate.getApplicationLocales())) }
+                LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+                    appLanguage = AppLanguage.fromLocales(AppCompatDelegate.getApplicationLocales())
+                }
                 var clockFace by remember {
                     val savedFace = preferences.getString(CLOCK_FACE_KEY, null)
                     mutableStateOf(ClockFace.entries.firstOrNull { it.name == savedFace } ?: ClockFace.Digital)
@@ -79,6 +87,13 @@ class MainActivity : ComponentActivity() {
                     traditionalLyrics = traditionalLyrics,
                     onTraditionalLyricsChange = player::setTraditionalLyrics,
                     backgroundStore = backgroundStore,
+                    appLanguage = appLanguage,
+                    onAppLanguageChange = { language ->
+                        if (appLanguage != language) {
+                            appLanguage = language
+                            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(language.tag))
+                        }
+                    },
                     clockFace = clockFace,
                     onClockFaceChange = {
                         clockFace = it

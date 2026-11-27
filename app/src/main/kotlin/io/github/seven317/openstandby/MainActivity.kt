@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -26,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.seven317.openstandby.ui.player.LyricsImportResult
 import io.github.seven317.openstandby.ui.player.PlayerViewModel
+import io.github.seven317.openstandby.ui.standby.ClockFace
 import io.github.seven317.openstandby.ui.standby.StandByBackgroundStore
 import io.github.seven317.openstandby.ui.standby.StandByPager
 import kotlinx.coroutines.launch
@@ -40,10 +42,15 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val preferences = getPreferences(MODE_PRIVATE)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             MaterialTheme(colorScheme = PlayerColors) {
+                var clockFace by remember {
+                    val savedFace = preferences.getString(CLOCK_FACE_KEY, null)
+                    mutableStateOf(ClockFace.entries.firstOrNull { it.name == savedFace } ?: ClockFace.Digital)
+                }
                 val player: PlayerViewModel = viewModel(factory = PlayerViewModel.Factory)
                 val hasNotificationAccess by mediaRepository.hasNotificationAccess.collectAsStateWithLifecycle()
                 val mediaState by player.mediaState.collectAsStateWithLifecycle()
@@ -72,6 +79,11 @@ class MainActivity : ComponentActivity() {
                     traditionalLyrics = traditionalLyrics,
                     onTraditionalLyricsChange = player::setTraditionalLyrics,
                     backgroundStore = backgroundStore,
+                    clockFace = clockFace,
+                    onClockFaceChange = {
+                        clockFace = it
+                        preferences.edit().putString(CLOCK_FACE_KEY, it.name).apply()
+                    },
                     onOpenNotificationSettings = ::openNotificationAccessSettings,
                     onReconnectMedia = mediaRepository::reconnect,
                     onPlaybackCommand = player::dispatch,
@@ -130,6 +142,8 @@ class MainActivity : ComponentActivity() {
         false
     }
 }
+
+private const val CLOCK_FACE_KEY = "clock_face"
 
 private val PlayerColors = darkColorScheme(
     primary = Color(0xFFF9F4E9),

@@ -2,6 +2,11 @@
 <resources>
     <string name="app_name" translatable="false">OpenStandBy</string>
     <string name="clock_module">Clock</string>
+    <string name="clock_face_section">Clock face</string>
+    <string name="clock_face_digital">Digital</string>
+    <string name="clock_face_analog">Analog</string>
+    <string name="clock_face_flip">Split flap</string>
+    <string name="clock_face_segmented">Seven-segment</string>
     <string name="speed_module">GPS speedometer</string>
     <string name="settings_title">Settings</string>
     <string name="close_settings">Close settings</string>

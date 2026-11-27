@@ -53,6 +53,7 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -76,6 +77,7 @@ internal fun StandByBackgroundSettings(
     onBlur: (BackgroundTarget, Int) -> Unit,
     onSavePhoto: suspend (BackgroundTarget, Bitmap, IntRect) -> Boolean,
     onBack: () -> Unit,
+    displaySettings: @Composable () -> Unit,
 ) {
     var cropUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     var saving by remember { mutableStateOf(false) }
@@ -108,6 +110,7 @@ internal fun StandByBackgroundSettings(
     }
 
     ModuleSettingsPage(stringResource(R.string.module_settings_title, stringResource(target.title)), onBack) {
+        displaySettings()
         BackgroundSettings(
             target = target,
             background = background,
@@ -115,6 +118,39 @@ internal fun StandByBackgroundSettings(
             onBlur = { onBlur(target, it) },
             onPhoto = { launcher.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly)) },
         )
+    }
+}
+
+@Composable
+internal fun ClockFaceSettings(face: ClockFace, background: ModuleBackground, onSelect: (ClockFace) -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        color = Color(0xFF20252D),
+    ) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.clock_face_section), style = MaterialTheme.typography.titleLarge)
+            Row(
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                for (option in ClockFace.entries) {
+                    FilterChip(
+                        selected = face == option,
+                        onClick = { onSelect(option) },
+                        label = { Text(stringResource(option.title)) },
+                    )
+                }
+            }
+            Box(
+                Modifier.fillMaxWidth().aspectRatio(3f).clip(RoundedCornerShape(10.dp))
+                    .clearAndSetSemantics {},
+                contentAlignment = Alignment.Center,
+            ) {
+                BackgroundImage(background, Modifier.matchParentSize(), preview = true)
+                ClockFaceArtwork(face, rememberClockTime(), Modifier.fillMaxSize().padding(horizontal = 14.dp, vertical = 8.dp))
+            }
+        }
     }
 }
 

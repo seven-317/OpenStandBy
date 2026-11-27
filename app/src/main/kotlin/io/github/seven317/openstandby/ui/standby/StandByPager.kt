@@ -60,6 +60,8 @@ internal fun StandByPager(
     traditionalLyrics: Boolean,
     onTraditionalLyricsChange: (Boolean) -> Unit,
     backgroundStore: StandByBackgroundStore,
+    clockFace: ClockFace,
+    onClockFaceChange: (ClockFace) -> Unit,
     onOpenNotificationSettings: () -> Unit,
     onReconnectMedia: () -> Unit,
     onPlaybackCommand: (Long, PlaybackCommand) -> Unit,
@@ -116,7 +118,11 @@ internal fun StandByPager(
                         onBlur = backgroundStore::setBlur,
                         onSavePhoto = backgroundStore::savePhoto,
                         onBack = closeSettings,
-                    )
+                    ) {
+                        if (target == BackgroundTarget.Clock) {
+                            ClockFaceSettings(clockFace, backgrounds.getValue(target), onClockFaceChange)
+                        }
+                    }
                 }
             }
         }
@@ -169,7 +175,7 @@ internal fun StandByPager(
                         onImportLyrics = onImportLyrics,
                         onRemoveLyrics = onRemoveLyrics,
                     )
-                    StandByPage.Clock -> ClockModule(backgrounds.getValue(BackgroundTarget.Clock))
+                    StandByPage.Clock -> ClockModule(backgrounds.getValue(BackgroundTarget.Clock), clockFace)
                     StandByPage.Speed -> SpeedModule(backgrounds.getValue(BackgroundTarget.Speed), active = pager.settledPage == page)
                 }
                 AnimatedVisibility(

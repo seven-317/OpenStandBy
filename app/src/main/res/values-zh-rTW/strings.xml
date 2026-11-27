@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="clock_module">時鐘</string>
+    <string name="clock_face_section">時鐘樣式</string>
+    <string name="clock_face_digital">數位</string>
+    <string name="clock_face_analog">指針</string>
+    <string name="clock_face_flip">翻頁風格</string>
+    <string name="clock_face_segmented">七段顯示</string>
     <string name="speed_module">GPS 時速</string>
     <string name="settings_title">設定</string>
     <string name="close_settings">關閉設定</string>

@@ -7,7 +7,6 @@ import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.SystemClock
 import android.provider.Settings
-import android.text.format.DateFormat
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -44,27 +43,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import io.github.seven317.openstandby.R
 import io.github.seven317.openstandby.data.location.GpsSpeed
 import io.github.seven317.openstandby.data.location.observeGpsSpeed
-import java.util.Date
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-
-@Composable
-internal fun ClockModule(background: ModuleBackground) {
-    val context = LocalContext.current
-    val owner = LocalLifecycleOwner.current
-    val now by produceState(Date(), owner) {
-        owner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            while (true) {
-                val time = System.currentTimeMillis()
-                value = Date(time)
-                delay(1_000L - Math.floorMod(time, 1_000L))
-            }
-        }
-    }
-    val time = DateFormat.getTimeFormat(context).format(now)
-    val date = DateFormat.getLongDateFormat(context).format(now)
-    ModuleReadout(background, stringResource(R.string.clock_module), time, date)
-}
 
 @Composable
 internal fun SpeedModule(background: ModuleBackground, active: Boolean) {
@@ -127,7 +107,7 @@ internal fun SpeedModule(background: ModuleBackground, active: Boolean) {
 }
 
 @Composable
-private fun ModuleReadout(
+internal fun ModuleReadout(
     background: ModuleBackground,
     label: String,
     value: String,

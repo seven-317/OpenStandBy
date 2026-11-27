@@ -94,6 +94,7 @@
     <string name="lyrics_source">Source: %1$s</string>
     <string name="lyrics_local_source">Local file</string>
     <string name="lyrics_netease_source">NetEase Cloud Music</string>
+    <string name="lyrics_kugeci_source">Kugeci</string>
     <string name="lyrics_import_file">Import lyrics file</string>
     <string name="lyrics_remove_local">Remove local lyrics</string>
     <string name="lyrics_imported">Lyrics saved for this track</string>

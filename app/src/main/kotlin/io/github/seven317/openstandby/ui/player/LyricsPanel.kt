@@ -176,6 +176,7 @@ internal fun LyricsScreen(
                             LyricsSource.Lrclib -> "LRCLIB"
                             LyricsSource.LrcMux -> "LRCMux"
                             LyricsSource.Netease -> stringResource(R.string.lyrics_netease_source)
+                            LyricsSource.Kugeci -> stringResource(R.string.lyrics_kugeci_source)
                             LyricsSource.Local -> stringResource(R.string.lyrics_local_source)
                             null -> null
                         }

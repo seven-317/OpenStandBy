@@ -10,7 +10,7 @@ internal sealed interface Lyrics {
     data object RateLimited : Lyrics
 }
 
-internal enum class LyricsSource { Lrclib, LrcMux, Netease, Local }
+internal enum class LyricsSource { Lrclib, LrcMux, Netease, Kugeci, Local }
 
 internal data class ResolvedLyrics(val content: Lyrics, val source: LyricsSource? = null)
 

@@ -30,7 +30,7 @@ The gear opens settings for the current screen. The clock and speedometer each h
 
 Tap the microphone to open lyrics. When a track has timed lyrics, the current line is highlighted and scrolls into view. Tap a timed line to seek if the music app supports it. Tap an empty part of the screen to show the progress bar and playback controls, or use × to return to the player.
 
-Online lookup checks **LRCLIB → LRCMux → NetEase Cloud Music** when the NetEase fallback is enabled. It uses the first line-synced result and falls back to plain text when that's all it finds. An LRC line with multiple timestamps appears at each of those times.
+Online lookup checks **LRCLIB → LRCMux → NetEase Cloud Music (if enabled) → Kugeci**. LRCLIB and LRCMux results must match the title and artist, and their track lengths must be within four seconds when the player provides a length. The app cross-checks LRCMux timed lyrics against Kugeci when it finds a unique title and artist match. If the lyrics disagree, the app continues to NetEase if enabled, then uses the Kugeci result. When only plain text is available, the app displays it directly. An LRC line with multiple timestamps appears at each of those times.
 
 **Try again** repeats the lookup. **Convert Simplified Chinese to Traditional** is available in **Lyrics options** and the player settings. Conversion runs on the device and keeps the lyrics in their original language.
 
@@ -44,7 +44,7 @@ While the track is loaded, open **Lyrics options** or the player settings and ta
 ### Enable the NetEase fallback
 
 > [!NOTE]
-> A standard build uses LRCLIB and LRCMux. NetEase is enabled when the build includes an API Enhanced service URL.
+> A standard build uses LRCLIB, LRCMux, and Kugeci. NetEase is enabled when the build includes an API Enhanced service URL.
 
 Deploy an instance of the community-maintained API Enhanced project. Replace the example address with its HTTPS base URL when building the app. [NetEase Cloud Music API Enhanced](https://github.com/NeteaseCloudMusicApiEnhanced/api-enhanced)
 

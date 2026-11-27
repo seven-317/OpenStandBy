@@ -1,6 +1,7 @@
 package io.github.seven317.openstandby
 
 import android.content.Context
+import io.github.seven317.openstandby.data.lyrics.KugeciLyricsApi
 import io.github.seven317.openstandby.data.lyrics.LocalLyricsStore
 import io.github.seven317.openstandby.data.lyrics.LyricsRepository
 import io.github.seven317.openstandby.data.lyrics.NeteaseLyricsApi
@@ -19,6 +20,7 @@ internal class AppContainer(context: Context) {
             createApi("https://lrclib.net/"),
             createApi("https://api.lrcmux.dev/compat/lrclib/"),
             "OpenStandBy/${BuildConfig.VERSION_NAME} (https://github.com/seven-317/OpenStandBy)",
+            kugeciApi = createApi<KugeciLyricsApi>("https://www.kugeci.com/"),
             neteaseApi = BuildConfig.NETEASE_LYRICS_BASE_URL.takeIf(String::isNotEmpty)?.let {
                 createApi<NeteaseLyricsApi>(it)
             },

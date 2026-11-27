@@ -49,12 +49,14 @@ android {
     }
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
 dependencies {
+    coreLibraryDesugaring(libs.desugar.jdk.libs.nio)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.appcompat)
@@ -71,6 +73,7 @@ dependencies {
     implementation(libs.coil.network.okhttp)
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.gson)
+    implementation(libs.jsoup)
     implementation(libs.opencc4j)
     testImplementation(libs.junit)
 }
